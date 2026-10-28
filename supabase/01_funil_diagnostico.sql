@@ -1,8 +1,13 @@
 -- ============================================================
 -- STARNEX · Funil Diagnóstico → CRM
--- Rodar UMA vez no SQL Editor do projeto "Starnex lp e CRM".
+-- Já aplicado em 28/10/2026. Rodar UMA vez no SQL Editor do projeto "Starnex lp e CRM".
 -- É aditivo: não apaga nada e não muda as regras de acesso atuais.
 -- ============================================================
+
+-- 5) Permite o tipo de atividade "diagnostico" (usado pela função do funil)
+alter table public.atividades drop constraint if exists atividades_tipo_check;
+alter table public.atividades add constraint atividades_tipo_check
+  check (tipo = any (array['nota','mudanca_estagio','whatsapp','ligacao','diagnostico']));
 
 -- 1) Diagnóstico do quiz guardado no próprio lead
 alter table public.leads add column if not exists diagnostico    jsonb;

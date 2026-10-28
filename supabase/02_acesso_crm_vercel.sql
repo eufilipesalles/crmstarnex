@@ -13,6 +13,7 @@
 -- ============================================================
 
 create table if not exists public.crm_usuarios (email text primary key);
+insert into public.crm_usuarios (email) values ('eufilipesalles.contato@gmail.com') on conflict do nothing;
 alter table public.crm_usuarios enable row level security;   -- a lista não é lida pela API
 
 create or replace function public.is_crm_user()

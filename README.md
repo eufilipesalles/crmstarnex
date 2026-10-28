@@ -4,8 +4,11 @@
 - `/crm` → CRM Starnex Lead Flow (login com e-mail e senha do Supabase)
 - `supabase/` → scripts do banco (não vão para o ar)
 
-## Configuração
-1. Rode `supabase/01_funil_diagnostico.sql` no SQL Editor do projeto "Starnex lp e CRM".
-2. Coloque seu e-mail em `supabase/02_acesso_crm_vercel.sql` e rode o arquivo.
-3. Em Authentication → Users, crie o usuário com esse e-mail. Em Authentication → Sign In / Providers, desative o cadastro público (Allow new users to sign up).
-4. Cole a chave publishable do projeto em `index.html` (`supabaseAnonKey`) e em `crm/index.html` (`SUPABASE_KEY`).
+## Situação
+- Banco "Starnex lp e CRM": scripts `01` e `02` já aplicados (28/10/2026).
+- Chave pública do Supabase já configurada no funil e no CRM.
+
+## Falta
+1. Supabase → Authentication → Users: criar o usuário eufilipesalles.contato@gmail.com com senha.
+2. Supabase → Authentication → Sign In / Providers: desativar "Allow new users to sign up".
+3. Para liberar outra pessoa no CRM: `insert into public.crm_usuarios (email) values ('email@dominio.com');`
