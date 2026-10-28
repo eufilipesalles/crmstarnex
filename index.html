@@ -15,11 +15,10 @@
    CONFIGURAÇÃO — edite só este bloco
    ============================================================ */
 window.STARNEX = {
-  whatsapp: "5555999132811",           // DDI 55 + DDD 55 + número
   pixelId: "1014003797608090",
-  supabaseUrl: "",                     // ex.: https://gtnnqoebcudsnzqicrto.supabase.co
-  supabaseAnonKey: "",                 // chave publishable/anon do projeto "Starnex lp e CRM"
-  calendarUrl: "",                     // link da página de agendamento do Google Agenda ou Cal.com (deixe vazio para usar só WhatsApp)
+  supabaseUrl: "https://gtnnqoebcudsnzqicrto.supabase.co",
+  supabaseAnonKey: "",                 // chave publishable/anon do projeto "Starnex lp e CRM" (obrigatória para os pedidos chegarem ao CRM)
+  prazoContato: "em até 1 dia útil",   // prazo prometido na confirmação
   ebookUrl: "manual-starnex.pdf",
   planosPorSemana: 5,
   vagasRestantes: null,                // número real de vagas desta semana; null esconde o contador
@@ -133,6 +132,10 @@ header .mono{color:var(--fraco)}
 .slots i{width:8px;height:8px;border-radius:50%;background:var(--alerta);animation:pulse 1.6s infinite}
 @keyframes pulse{50%{opacity:.3}}
 .actions{display:flex;gap:12px;flex-wrap:wrap}
+[hidden]{display:none!important}
+.done{margin-top:6px;border:1px solid rgba(91,214,160,.4);background:rgba(91,214,160,.08);border-radius:12px;padding:20px 22px}
+.done h3{font-size:22px;color:var(--ok);margin-bottom:6px}
+.done p{color:#D9D4E8}
 .cal{display:none;margin-top:22px;border-radius:12px;overflow:hidden;background:#fff}
 .cal.on{display:block}
 .cal iframe{width:100%;height:680px;border:0;display:block}
@@ -332,11 +335,6 @@ function finish(){
 
 function renderResult(r, resumo){
   const nomeCli = esc(A.clinica);
-  const wppText = encodeURIComponent(
-    `Olá, Filipe! Fiz o diagnóstico da ${A.clinica} (${A.cidade}).\n` +
-    (r.volumeMode ? `Resultado: conversão acima da referência, foco em volume.\n` : `Estimativa: ${r.pMin} a ${r.pMax} pacientes/mês deixando de agendar.\n`) +
-    `Maior vazamento: ${r.vaz.t}.\nQuero meu Plano de Recuperação de Pacientes.`);
-  const wppUrl = `https://wa.me/${C.whatsapp}?text=${wppText}`;
   const slots = (typeof C.vagasRestantes === 'number')
     ? `<div class="slots"><i></i>${C.vagasRestantes>0 ? `Restam ${C.vagasRestantes} de ${C.planosPorSemana} vagas nesta semana` : 'Vagas desta semana preenchidas: reserve para a próxima'}</div>` : '';
 
@@ -372,23 +370,60 @@ function renderResult(r, resumo){
       </ul>
       ${slots}
       <p style="color:var(--suave);font-size:14px;margin-bottom:18px">Montamos ${C.planosPorSemana} planos por semana, porque cada um é feito individualmente.</p>
-      <div class="actions">
-        ${C.calendarUrl ? `<button class="btn" id="agendar">Escolher horário para meu plano →</button><a class="btn ghost" id="wpp" href="${wppUrl}" target="_blank" rel="noopener">Prefiro falar pelo WhatsApp</a>`
-                        : `<a class="btn" id="wpp" href="${wppUrl}" target="_blank" rel="noopener">Quero meu plano →</a>`}
+      <div id="pedido">
+        <div class="ask" id="askContato" hidden>
+          <p style="color:#D9D4E8;margin-bottom:14px">Confirme para onde enviamos o convite da videochamada:</p>
+          <div class="grid2">
+            <div class="field"><label for="p-nome">Seu nome</label><input id="p-nome" autocomplete="name" value="${esc(A.nome||'')}"></div>
+            <div class="field"><label for="p-wpp">WhatsApp com DDD</label><input id="p-wpp" type="tel" inputmode="tel" autocomplete="tel" placeholder="(55) 99999-9999" value="${esc(A.whatsapp||'')}"></div>
+          </div>
+        </div>
+        <div class="actions"><button class="btn" id="pedirPlano">Quero meu plano →</button></div>
+        <div class="err" id="pedidoErr" role="alert"></div>
       </div>
-      ${C.calendarUrl ? `<div class="cal" id="cal"></div>` : ''}
+      <div class="done" id="pedidoOk" hidden>
+        <h3>Pedido recebido.</h3>
+        <p>O plano da ${nomeCli} entrou na fila desta semana. Vamos chamar você no WhatsApp ${C.prazoContato} para combinar o melhor horário da videochamada.</p>
+      </div>
     </div>`;
 
   $('dl').onclick = () => { track('material_baixado'); px('MaterialBaixado',{},true); };
-  $('wpp').onclick = () => { track('whatsapp_click', {origem:'resultado'}); px('Contact'); };
-  if(C.calendarUrl){
-    $('agendar').onclick = () => {
-      const cal=$('cal');
-      if(!cal.firstChild){ const f=document.createElement('iframe'); f.src=C.calendarUrl; f.title='Agendar plano'; f.loading='lazy'; cal.appendChild(f); }
-      cal.classList.add('on'); cal.scrollIntoView({behavior:'smooth',block:'start'});
-      track('agenda_aberta'); px('Schedule');
-    };
+  $('p-wpp').addEventListener('input', maskWpp);
+  $('pedirPlano').onclick = () => pedirPlano(resumo, false);
+}
+
+function maskWpp(e){ let d=e.target.value.replace(/\D/g,'').slice(0,11); e.target.value = d.length>6 ? `(${d.slice(0,2)}) ${d.slice(2,d.length-4)}-${d.slice(-4)}` : d.length>2 ? `(${d.slice(0,2)}) ${d.slice(2)}` : d; }
+
+async function pedirPlano(resumo){
+  const btn=$('pedirPlano'), err=$('pedidoErr'), ask=$('askContato');
+  err.textContent='';
+  if(!ask.hidden){
+    const nome=$('p-nome').value.trim(), wpp=$('p-wpp').value.replace(/\D/g,'');
+    if(nome.length<2){ err.textContent='Informe seu nome.'; return; }
+    if(wpp.length<10){ err.textContent='Informe um WhatsApp válido com DDD.'; return; }
+    A.nome=nome; A.whatsapp=wpp; resumo.nome=nome; resumo.whatsapp=wpp;
   }
+  if(!C.supabaseUrl || !C.supabaseAnonKey){ err.textContent='Não foi possível registrar seu pedido agora. Tente novamente em alguns minutos.'; console.error('Configuração pendente: supabaseAnonKey'); return; }
+  btn.disabled=true; btn.textContent='Enviando…';
+  try{
+    const res = await fetch(C.supabaseUrl.replace(/\/$/,'') + '/rest/v1/rpc/registrar_interesse_diagnostico', {
+      method:'POST',
+      headers:{'apikey':C.supabaseAnonKey,'Authorization':'Bearer '+C.supabaseAnonKey,'Content-Type':'application/json'},
+      body: JSON.stringify({p_lead_ref:leadRef, p_nome:A.nome||null, p_whatsapp:A.whatsapp||null, p_clinica:A.clinica, p_cidade:A.cidade, p_segmento:A.segmento.label, p_diagnostico:resumo})
+    });
+    if(!res.ok){
+      const body = await res.json().catch(()=>({}));
+      const msg = String(body.message||'');
+      if(/whatsapp_obrigatorio/.test(msg)){ ask.hidden=false; $('p-nome').focus(); err.textContent='Falta só o seu contato para enviarmos o convite.'; return; }
+      if(/whatsapp_invalido/.test(msg)){ ask.hidden=false; err.textContent='Confira o número de WhatsApp, com DDD.'; return; }
+      throw new Error(msg || ('HTTP '+res.status));
+    }
+    $('pedido').hidden=true; $('pedidoOk').hidden=false;
+    track('plano_solicitado', {clinica:A.clinica}); px('Schedule');
+  }catch(e){
+    console.error(e);
+    err.textContent='Não conseguimos registrar seu pedido. Verifique sua conexão e tente de novo.';
+  }finally{ btn.disabled=false; btn.textContent='Quero meu plano →'; }
 }
 })();
 </script>

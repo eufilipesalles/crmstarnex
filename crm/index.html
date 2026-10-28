@@ -1,0 +1,524 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}</style></head><body>
+<title>Starnex Lead Flow</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* Layout: cabeçalho fixo + quadro kanban com rolagem lateral + ficha lateral do lead. Visual escuro da Starnex (tema único). */
+  :root{
+    color-scheme:dark;
+    --bg:#0b0710; --panel:#14101c; --panel2:#1b1526; --border:#2b2338;
+    --purple:#8b5cf6; --purple2:#a78bfa; --purple-deep:#5b2a86;
+    --text:#f4f1fa; --muted:#a89bbf; --muted2:#7c6f93;
+    --green:#34d399; --yellow:#fbbf24; --red:#f87171;
+    --radius:14px;
+    --font-head:'Space Grotesk', Arial, Helvetica, sans-serif;
+    --font-body:'Inter', Arial, Helvetica, sans-serif;
+  }
+  [hidden]{display:none!important;}
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--font-body); -webkit-font-smoothing:antialiased; display:flex; flex-direction:column; min-height:100%;}
+  body::before{content:""; position:fixed; inset:0 0 auto; height:env(safe-area-inset-top,0px); z-index:10; background:#120b1c;}
+  header{
+    padding-block:16px; padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px));
+    border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    background:linear-gradient(180deg,#120b1c 0%,var(--bg) 100%); position:sticky; top:env(safe-area-inset-top,0px); z-index:20;
+  }
+  .brand{display:flex; align-items:center; gap:10px; font-family:var(--font-head); font-weight:700; font-size:18px; margin-right:6px;}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--purple);box-shadow:0 0 12px var(--purple);}
+  .brand small{display:block; font-family:var(--font-body); font-weight:500; font-size:11px; color:var(--muted2); letter-spacing:.08em; text-transform:uppercase;}
+  nav{display:flex; gap:6px; background:var(--panel); padding:4px; border-radius:10px; border:1px solid var(--border);}
+  nav button{background:transparent; border:none; color:var(--muted); font:600 13px var(--font-body); padding:8px 14px; border-radius:8px; cursor:pointer;}
+  nav button.active{background:var(--purple); color:#fff;}
+  select.hsel{background:var(--panel); color:var(--text); border:1px solid var(--border); border-radius:10px; padding:9px 12px; font:600 13px var(--font-body); cursor:pointer; max-width:100%;}
+  .spacer{flex:1;}
+  button.iconbtn{background:var(--panel); border:1px solid var(--border); color:var(--muted); border-radius:10px; padding:9px 14px; font:600 13px var(--font-body); cursor:pointer;}
+  button.iconbtn:hover{color:var(--text); border-color:var(--purple);}
+  button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-visible, .card:focus-visible{outline:2px solid var(--purple2); outline-offset:2px;}
+  main{flex:1; padding-block:20px; padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px)); min-width:0;}
+  #statusBar{margin-bottom:16px; padding:12px 16px; border-radius:10px; font-size:13px; line-height:1.5; border:1px solid var(--border);}
+  #statusBar.err{background:#2a1216; border-color:#5b2530; color:#fca5a5;}
+  #statusBar.info{background:#151129; border-color:#33285a; color:var(--purple2);}
+
+  /* Login */
+  #login{max-width:380px; margin:8vh auto 0; background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:28px;}
+  #login h2{font-family:var(--font-head); margin:0 0 6px; font-size:22px;}
+  #login p{color:var(--muted); font-size:13px; margin:0 0 20px;}
+  #login label{display:block; font-size:12px; color:var(--muted); margin:12px 0 6px;}
+  #login input{width:100%; background:var(--panel2); border:1px solid var(--border); border-radius:8px; color:var(--text); font:500 14px var(--font-body); padding:11px 12px;}
+  #loginErr{color:var(--red); font-size:13px; min-height:18px; margin-top:10px;}
+
+  /* Kanban */
+  #boardWrap{overflow-x:auto; padding-bottom:8px;}
+  #board{display:flex; gap:14px; align-items:flex-start; width:max-content;}
+  .col{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); width:270px; display:flex; flex-direction:column; max-height:calc(100vh - 170px);}
+  .col.dragover{border-color:var(--purple); box-shadow:0 0 0 2px var(--purple-deep) inset;}
+  .col-head{padding:14px 14px 10px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:8px;}
+  .col-head h3{margin:0; font-family:var(--font-head); font-size:14px; font-weight:700;}
+  .count{background:var(--panel2); color:var(--muted); font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; font-variant-numeric:tabular-nums;}
+  .col-body{padding:10px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:10px;}
+  .card{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px; cursor:pointer; transition:border-color .15s;}
+  .card:hover{border-color:var(--purple);}
+  .card.dragging{opacity:.4;}
+  .card h4{margin:0 0 6px; font-size:13px; font-weight:600; line-height:1.3; overflow-wrap:anywhere;}
+  .badges{display:flex; flex-wrap:wrap; gap:5px; margin-bottom:6px;}
+  .badge{font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; letter-spacing:.02em;}
+  .badge.tier1{background:#2a1a45; color:var(--purple2);}
+  .badge.tier2{background:#142b26; color:var(--green);}
+  .badge.prio-alta{background:#142b26; color:var(--green);}
+  .badge.prio-media{background:#332a12; color:var(--yellow);}
+  .badge.prio-baixa{background:#241f2e; color:var(--muted2);}
+  .badge.b-diag{background:#3a1f6b; color:#e4d6ff;}
+  .card .meta{font-size:11px; color:var(--muted); line-height:1.6; overflow-wrap:anywhere;}
+  .card .est{margin-top:6px; font-size:11px; color:var(--purple2); font-weight:600;}
+  .empty-col{padding:20px 14px; color:var(--muted2); font-size:12px; text-align:center;}
+
+  /* Dashboard */
+  .cards-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:20px;}
+  .stat{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px;}
+  .stat .num{font-family:var(--font-head); font-size:28px; font-weight:700; color:var(--purple2); font-variant-numeric:tabular-nums;}
+  .stat .lbl{font-size:12px; color:var(--muted); margin-top:4px;}
+  .barblock{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; margin-bottom:14px;}
+  .barblock h4{margin:0 0 14px; font-family:var(--font-head); font-size:14px;}
+  .barrow{display:flex; align-items:center; gap:10px; margin-bottom:10px; font-size:12px;}
+  .barrow .lname{width:170px; color:var(--muted); flex-shrink:0; overflow-wrap:anywhere;}
+  .barrow .track{flex:1; background:var(--panel2); border-radius:6px; height:14px; overflow:hidden; min-width:0;}
+  .barrow .fill{height:100%; background:linear-gradient(90deg,var(--purple-deep),var(--purple)); border-radius:6px;}
+  .barrow .n{width:30px; text-align:right; font-weight:600; font-variant-numeric:tabular-nums;}
+
+  /* Ficha do lead */
+  #overlay{position:fixed; inset:0; background:rgba(5,2,10,.6); z-index:30;}
+  #drawer{position:fixed; top:0; right:0; height:100%; width:420px; max-width:100vw; background:var(--panel); border-left:1px solid var(--border); z-index:31; transform:translateX(100%); transition:transform .2s ease; display:flex; flex-direction:column; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); padding-right:env(safe-area-inset-right,0px);}
+  #drawer.show{transform:translateX(0);}
+  .dhead{padding:20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+  .dhead h3{margin:0; font-family:var(--font-head); font-size:17px; overflow-wrap:anywhere;}
+  .close{background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; line-height:1; padding:4px;}
+  .dbody{padding:20px; overflow-y:auto; flex:1;}
+  .actions{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px;}
+  .actions select{flex:1; min-width:160px;}
+  a.wbtn{display:inline-flex; align-items:center; gap:6px; background:#123227; color:var(--green); border:1px solid #1f5240; border-radius:10px; padding:9px 12px; font:600 13px var(--font-body); text-decoration:none;}
+  .diag{background:linear-gradient(150deg,#22113f,#160e26); border:1px solid #3a2a63; border-radius:12px; padding:16px; margin-bottom:18px;}
+  .diag .lbl{font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--purple2); margin-bottom:6px;}
+  .diag .big{font-family:var(--font-head); font-size:22px; font-weight:700; font-variant-numeric:tabular-nums;}
+  .diag .money{color:var(--purple2); font-weight:600; font-size:13px; margin-top:2px;}
+  .diag .vaz{margin-top:10px; font-size:13px;}
+  .diag dl{display:grid; grid-template-columns:auto 1fr; gap:6px 12px; margin:14px 0 0; font-size:12px;}
+  .diag dt{color:var(--muted2);}
+  .diag dd{margin:0; color:var(--text); overflow-wrap:anywhere;}
+  .field{margin-bottom:14px;}
+  .field .k{font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted2); margin-bottom:3px;}
+  .field .v{font-size:13px; line-height:1.5; overflow-wrap:anywhere;}
+  .field .v a{color:var(--purple2);}
+  textarea#noteInput{width:100%; background:var(--panel2); border:1px solid var(--border); border-radius:8px; color:var(--text); font:13px var(--font-body); padding:10px; resize:vertical; min-height:60px;}
+  button.primary{background:var(--purple); color:#fff; border:none; border-radius:8px; padding:9px 16px; font:600 13px var(--font-body); cursor:pointer; margin-top:8px;}
+  button.primary:disabled{opacity:.5; cursor:default;}
+  .activity{border-top:1px solid var(--border); padding-top:10px; margin-top:14px;}
+  .activity-item{font-size:12px; color:var(--muted); margin-bottom:10px; padding-bottom:10px; border-bottom:1px dashed var(--border); overflow-wrap:anywhere;}
+  .activity-item .when{color:var(--muted2); font-size:10px; margin-top:2px;}
+  .loading{color:var(--muted2); font-size:12px; padding:20px; text-align:center;}
+  @media (max-width:600px){ .brand{width:100%;} .hsel{flex:1;} .col{width:82vw;} }
+  @media (prefers-reduced-motion:reduce){ #drawer{transition:none;} }
+</style>
+
+<header>
+  <div class="brand"><span class="dot"></span><div>Starnex Lead Flow<small>CRM interno</small></div></div>
+  <select id="pipelineSelect" class="hsel" aria-label="Pipeline"></select>
+  <select id="segFilter" class="hsel" aria-label="Segmento"><option value="">Todos os segmentos</option></select>
+  <nav><button id="tabBoard" class="active">Pipeline</button><button id="tabDash">Dashboard</button></nav>
+  <div class="spacer"></div>
+  <button class="iconbtn" id="refreshBtn">↻ Atualizar</button>
+  <button class="iconbtn" id="logoutBtn" hidden>Sair</button>
+</header>
+
+<main>
+  <div id="statusBar" hidden></div>
+  <form id="login" hidden>
+    <h2>Entrar no CRM</h2>
+    <p>Use o e-mail e a senha cadastrados no Supabase da Starnex.</p>
+    <label for="loginEmail">E-mail</label><input id="loginEmail" type="email" autocomplete="username" required>
+    <label for="loginPass">Senha</label><input id="loginPass" type="password" autocomplete="current-password" required>
+    <button class="primary" id="loginBtn" type="submit" style="width:100%;margin-top:18px;padding:12px">Entrar</button>
+    <div id="loginErr" role="alert"></div>
+  </form>
+  <div id="boardWrap"><div id="board"><div class="loading">Carregando…</div></div></div>
+  <div id="dashboard" hidden></div>
+</main>
+
+<div id="overlay" hidden></div>
+<aside id="drawer" aria-label="Ficha do lead">
+  <div class="dhead"><h3 id="dTitle">Lead</h3><button class="close" id="dClose" aria-label="Fechar">✕</button></div>
+  <div class="dbody" id="dBody"></div>
+</aside>
+
+<script>
+/* ================== CONFIGURAÇÃO ================== */
+const PROJECT_ID   = "gtnnqoebcudsnzqicrto";
+const SUPABASE_URL = "https://gtnnqoebcudsnzqicrto.supabase.co";
+const SUPABASE_KEY = "";   // chave publishable/anon — necessária só na versão fora do Claude (Vercel)
+const FUNIL_PIPELINE = "Funil Diagnóstico";
+/* ================================================== */
+
+const $ = id => document.getElementById(id);
+let api = null, pipelines = [], currentPipelineId = null, stages = [], leads = [], currentLeadId = null, view = "board", segFilter = "";
+let hasDiagCol = true;
+
+/* ---------- utilidades ---------- */
+function h(v){ return String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function sq(v){ if(v === null || v === undefined) return "NULL"; return "'" + String(v).replace(/'/g,"''") + "'"; }
+function fmtDate(iso){ try{ const d=new Date(iso); return d.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"2-digit"})+" "+d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}); }catch(e){ return iso||""; } }
+function safeUrl(u){ try{ const x=new URL(u); return (x.protocol==="https:"||x.protocol==="http:") ? x.href : ""; }catch(e){ return ""; } }
+function brl(n){ return Number(n||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0}); }
+function waLink(num){ let d=String(num||"").replace(/\D/g,""); if(d.length<10) return ""; if(d.length<=11) d="55"+d; return "https://wa.me/"+d; }
+function prioClass(p){ const s=(p||"").toLowerCase(); return s.startsWith("alta")?"prio-alta":(s.startsWith("média")||s.startsWith("media"))?"prio-media":"prio-baixa"; }
+function tierClass(t){ return (t||"").startsWith("Tier 1") ? "tier1" : "tier2"; }
+function segOf(l){ return l.segmento || l.especialidade || ""; }
+function visibleLeads(){ return segFilter ? leads.filter(l => segOf(l) === segFilter) : leads; }
+function diagOf(l){ let d=l.diagnostico; if(typeof d==="string"){ try{ d=JSON.parse(d); }catch(e){ d=null; } } return d && typeof d==="object" ? d : null; }
+function showStatus(kind, html){ const el=$("statusBar"); el.className=kind; el.innerHTML=html; el.hidden=false; }
+function clearStatus(){ const el=$("statusBar"); el.hidden=true; el.innerHTML=""; }
+function isMissingDiagCol(err){ return /diagnostico/i.test((err && (err.message||err.details||err.hint)) || String(err||"")); }
+
+function describeError(err){
+  console.error("Starnex Lead Flow — erro:", err);
+  const code = err && err.code;
+  const raw = (err && err.message) ? err.message : (typeof err === "string" ? err : (()=>{ try{ return JSON.stringify(err); }catch(e){ return String(err); } })());
+  const reconnect = "Reconecte o Supabase em <b>claude.ai → Configurações → Conectores</b> e clique em Atualizar.";
+  const map = {
+    needs_reauth: reconnect, server_not_connected: "O conector Supabase não está disponível nesta conta. " + reconnect,
+    consent_required: "Esta página precisa da sua permissão para acessar o Supabase. Atualize a página e aceite a conexão.",
+    selection_required: "Você tem mais de uma conexão Supabase. Escolha a da Starnex quando solicitado e clique em Atualizar.",
+    blocked_by_policy: "O acesso ao Supabase foi bloqueado pela política da sua organização.",
+    tool_error: "O banco de dados recusou a operação.", server_unavailable: "O Supabase não respondeu a tempo. Clique em Atualizar.",
+    upstream_error: "Falha temporária na conexão. Clique em Atualizar.", not_granted: "Esta visualização não tem permissão para usar conectores.",
+    PGRST301: "Sua sessão expirou. Saia e entre de novo.", "42501": "Seu usuário não tem permissão para ver estes dados. Confira se o seu e-mail está na lista de usuários do CRM."
+  };
+  return (map[code] || "Não foi possível completar a operação.") + `<br><small style="opacity:.75">Detalhe técnico${code?" ["+h(code)+"]":""}: ${h(raw||"sem mensagem")}</small>`;
+}
+
+/* ================== CAMADA DE DADOS: conector do Claude ================== */
+function extractJson(text){
+  const m = text.match(/<untrusted-data-([a-zA-Z0-9-]+)>[ \t]*\n([\s\S]*?)\n[ \t]*<\/untrusted-data-\1>/);
+  let s;
+  if(m){ s = m[2].trim(); }
+  else{
+    const starts=["[","{"].map(c=>text.indexOf(c)).filter(i=>i!==-1); const a=starts.length?Math.min(...starts):-1;
+    const b=Math.max(text.lastIndexOf("]"), text.lastIndexOf("}")); s=(a!==-1&&b>a)?text.slice(a,b+1).trim():text.trim();
+  }
+  return s === "" ? [] : JSON.parse(s);
+}
+function parseResult(res){
+  let p = (res && res.payload !== undefined) ? res.payload : undefined;
+  if(p === undefined && res && res.content && res.content.length){ const t=res.content.find(c=>c.type==="text"); p=t?t.text:""; }
+  if(Array.isArray(p)) return p;
+  if(typeof p === "string"){ try{ return extractJson(p); }catch(e){ throw {code:"parse_error", message:"Resposta não reconhecida: "+p.slice(0,200)}; } }
+  if(p && typeof p === "object"){
+    if(typeof p.result === "string"){ try{ return extractJson(p.result); }catch(e){ throw {code:"parse_error", message:"Resposta não reconhecida: "+p.result.slice(0,200)}; } }
+    if(Array.isArray(p.rows)) return p.rows;
+    throw {code:"parse_error", message:"Formato não reconhecido: "+JSON.stringify(p).slice(0,200)};
+  }
+  return [];
+}
+function mcpApi(mcp){
+  const run = async q => parseResult(await mcp.callTool("Supabase","execute_sql",{project_id:PROJECT_ID, query:q},{cache:false}));
+  const baseCols = "id, nome_completo, whatsapp, email, especialidade, tier, instagram, endereco, decisor_provavel, prioridade, google_maps_link, observacoes, estagio_id, origem, criado_em, cidade, segmento, (select c.nome from canais c where c.id = leads.canal_id) as canal";
+  return {
+    mode:"mcp",
+    pipelines: () => run("select id, nome from pipelines order by nome;"),
+    stages: pid => run(`select id, nome, ordem, is_ganho, is_perdido from pipeline_estagios where pipeline_id = ${sq(pid)} order by ordem;`),
+    leads: async ids => {
+      const inList = ids.map(sq).join(",");
+      if(hasDiagCol){
+        try{ return await run(`select ${baseCols}, diagnostico, diagnostico_em from leads where estagio_id in (${inList}) order by coalesce(diagnostico_em, criado_em) desc;`); }
+        catch(e){ if(!isMissingDiagCol(e)) throw e; hasDiagCol=false; }
+      }
+      return run(`select ${baseCols} from leads where estagio_id in (${inList}) order by criado_em desc;`);
+    },
+    move: async (id, stageId, stageName) => {
+      await run(`update leads set estagio_id = ${sq(stageId)}, atualizado_em = now() where id = ${sq(id)};`);
+      await run(`insert into atividades (lead_id, tipo, conteudo) values (${sq(id)}, 'mudanca_estagio', ${sq("Movido para " + stageName)});`);
+    },
+    note: (id, txt) => run(`insert into atividades (lead_id, tipo, conteudo) values (${sq(id)}, 'nota', ${sq(txt)});`),
+    activities: id => run(`select tipo, conteudo, criado_em from atividades where lead_id = ${sq(id)} order by criado_em desc limit 30;`)
+  };
+}
+
+/* ================== CAMADA DE DADOS: Supabase direto (Vercel) ================== */
+function sbApi(sb){
+  const ok = r => { if(r.error) throw r.error; return r.data || []; };
+  const baseCols = "id,nome_completo,whatsapp,email,especialidade,tier,instagram,endereco,decisor_provavel,prioridade,google_maps_link,observacoes,estagio_id,origem,criado_em,cidade,segmento";
+  let embedCanal = true;
+  return {
+    mode:"sb",
+    pipelines: async () => ok(await sb.from("pipelines").select("id,nome").order("nome")),
+    stages: async pid => ok(await sb.from("pipeline_estagios").select("id,nome,ordem,is_ganho,is_perdido").eq("pipeline_id", pid).order("ordem")),
+    leads: async ids => {
+      for(let attempt=0; attempt<3; attempt++){
+        const cols = baseCols + (hasDiagCol ? ",diagnostico,diagnostico_em" : "") + (embedCanal ? ",canais(nome)" : "");
+        const r = await sb.from("leads").select(cols).in("estagio_id", ids).order("criado_em",{ascending:false});
+        if(!r.error) return (r.data||[]).map(l => ({...l, canal: l.canais ? l.canais.nome : null}))
+          .sort((a,b) => new Date(b.diagnostico_em||b.criado_em) - new Date(a.diagnostico_em||a.criado_em));
+        if(hasDiagCol && isMissingDiagCol(r.error)){ hasDiagCol=false; continue; }
+        if(embedCanal && /canais|relationship/i.test(r.error.message||"")){ embedCanal=false; continue; }
+        throw r.error;
+      }
+      return [];
+    },
+    move: async (id, stageId, stageName) => {
+      ok(await sb.from("leads").update({estagio_id:stageId, atualizado_em:new Date().toISOString()}).eq("id", id));
+      ok(await sb.from("atividades").insert({lead_id:id, tipo:"mudanca_estagio", conteudo:"Movido para "+stageName}));
+    },
+    note: async (id, txt) => ok(await sb.from("atividades").insert({lead_id:id, tipo:"nota", conteudo:txt})),
+    activities: async id => ok(await sb.from("atividades").select("tipo,conteudo,criado_em").eq("lead_id", id).order("criado_em",{ascending:false}).limit(30))
+  };
+}
+
+function loadScript(src){ return new Promise((res, rej) => { const s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=()=>rej(new Error("Falha ao carregar "+src)); document.head.appendChild(s); }); }
+
+/* ================== INICIALIZAÇÃO ================== */
+async function init(){
+  wireUi();
+  // Dentro do Claude o objeto window.claude pode chegar um instante depois do carregamento.
+  for(let i=0; i<15 && !(window.claude && typeof window.claude.use === "function"); i++) await new Promise(r => setTimeout(r, 100));
+  if(window.claude && typeof window.claude.use === "function"){
+    let mcp = null;
+    try{ mcp = await window.claude.use("mcp"); }catch(e){ mcp = null; }
+    if(!mcp){ showStatus("err","Não consegui acessar o conector Supabase nesta visualização. Abra o CRM pelo link do Claude, com sua conta logada e o Supabase da Starnex conectado."); $("board").innerHTML=""; return; }
+    api = mcpApi(mcp);
+    return loadAll();
+  }
+  // Fora do Claude: Supabase direto com login
+  if(!SUPABASE_KEY){ showStatus("err","Falta configurar a chave publishable do Supabase (SUPABASE_KEY) neste arquivo."); $("board").innerHTML=""; return; }
+  try{ await loadScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"); }
+  catch(e){ showStatus("err","Não foi possível carregar a biblioteca do Supabase. Verifique sua conexão e recarregue."); return; }
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth:{persistSession:true, autoRefreshToken:true}});
+  api = sbApi(sb);
+  $("logoutBtn").hidden = false;
+  $("logoutBtn").onclick = async () => { await sb.auth.signOut(); location.reload(); };
+  const { data } = await sb.auth.getSession();
+  if(data && data.session) return loadAll();
+  showLogin(sb);
+}
+
+function showLogin(sb){
+  $("boardWrap").hidden = true; $("dashboard").hidden = true; $("login").hidden = false;
+  document.querySelector("header nav").hidden = true; $("pipelineSelect").hidden = true; $("segFilter").hidden = true; $("refreshBtn").hidden = true; $("logoutBtn").hidden = true;
+  $("login").onsubmit = async e => {
+    e.preventDefault();
+    const btn=$("loginBtn"); btn.disabled=true; btn.textContent="Entrando…"; $("loginErr").textContent="";
+    const { error } = await sb.auth.signInWithPassword({ email:$("loginEmail").value.trim(), password:$("loginPass").value });
+    btn.disabled=false; btn.textContent="Entrar";
+    if(error){ $("loginErr").textContent = /invalid/i.test(error.message) ? "E-mail ou senha incorretos." : error.message; return; }
+    location.reload();
+  };
+  $("loginEmail").focus();
+}
+
+function wireUi(){
+  $("refreshBtn").onclick = () => loadAll(true);
+  $("tabBoard").onclick = () => switchView("board");
+  $("tabDash").onclick = () => switchView("dashboard");
+  $("pipelineSelect").onchange = async e => { currentPipelineId = e.target.value; segFilter = ""; try{ await loadPipelineData(); }catch(err){ showStatus("err", describeError(err)); } };
+  $("segFilter").onchange = e => { segFilter = e.target.value; renderCurrent(); };
+  $("dClose").onclick = closeDrawer;
+  $("overlay").onclick = closeDrawer;
+  document.addEventListener("keydown", e => { if(e.key === "Escape") closeDrawer(); });
+}
+
+function switchView(v){
+  view = v;
+  $("tabBoard").classList.toggle("active", v==="board");
+  $("tabDash").classList.toggle("active", v==="dashboard");
+  $("boardWrap").hidden = v !== "board";
+  $("dashboard").hidden = v !== "dashboard";
+  renderCurrent();
+}
+
+async function loadAll(manual){
+  clearStatus();
+  $("board").innerHTML = '<div class="loading">Carregando dados do Supabase…</div>';
+  try{
+    pipelines = await api.pipelines();
+    if(!Array.isArray(pipelines)) throw {code:"parse_error", message:"pipelines não é uma lista"};
+    if(!currentPipelineId || !pipelines.some(p => String(p.id) === String(currentPipelineId))){
+      const pref = pipelines.find(p => p.nome === FUNIL_PIPELINE) || pipelines.find(p => p.nome === "Social Selling") || pipelines[0];
+      currentPipelineId = pref ? String(pref.id) : null;
+    }
+    $("pipelineSelect").innerHTML = pipelines.map(p => `<option value="${h(p.id)}" ${String(p.id)===currentPipelineId?"selected":""}>${h(p.nome)}</option>`).join("");
+    if(!pipelines.some(p => p.nome === FUNIL_PIPELINE)) showStatus("info", `O pipeline <b>${h(FUNIL_PIPELINE)}</b> ainda não existe. Rode o arquivo <b>01_funil_diagnostico.sql</b> no Supabase para os pedidos do funil aparecerem aqui.`);
+    await loadPipelineData();
+    if(manual){ showStatus("info","Atualizado agora mesmo."); setTimeout(clearStatus, 2000); }
+  }catch(err){ $("board").innerHTML = ""; showStatus("err", describeError(err)); }
+}
+
+async function loadPipelineData(){
+  if(!currentPipelineId){ stages=[]; leads=[]; renderCurrent(); return; }
+  stages = (await api.stages(currentPipelineId)).map(s => ({...s, id:String(s.id)}));
+  leads = stages.length ? (await api.leads(stages.map(s => s.id))).map(l => ({...l, id:String(l.id), estagio_id:String(l.estagio_id)})) : [];
+  fillSegFilter();
+  renderCurrent();
+}
+
+function fillSegFilter(){
+  const segs = [...new Set(leads.map(segOf).filter(Boolean))].sort();
+  if(segFilter && !segs.includes(segFilter)) segFilter = "";
+  $("segFilter").innerHTML = '<option value="">Todos os segmentos</option>' + segs.map(x => `<option value="${h(x)}" ${x===segFilter?"selected":""}>${h(x)} (${leads.filter(l=>segOf(l)===x).length})</option>`).join("");
+}
+
+function renderCurrent(){ view === "board" ? renderBoard() : renderDashboard(); }
+
+/* ---------- quadro ---------- */
+function renderBoard(){
+  $("board").innerHTML = stages.length ? stages.map(st => {
+    const items = visibleLeads().filter(l => l.estagio_id === st.id);
+    return `<section class="col" data-stage="${h(st.id)}">
+      <div class="col-head"><h3>${h(st.nome)}</h3><span class="count">${items.length}</span></div>
+      <div class="col-body">${items.length ? items.map(cardHtml).join("") : '<div class="empty-col">Sem leads</div>'}</div>
+    </section>`;
+  }).join("") : '<div class="loading">Este pipeline não tem etapas.</div>';
+  wireDnD();
+}
+
+function cardHtml(l){
+  const b = [];
+  const d = diagOf(l);
+  if(d) b.push('<span class="badge b-diag">Diagnóstico</span>');
+  if(l.tier) b.push(`<span class="badge ${tierClass(l.tier)}">${h(String(l.tier).replace("Tier ","T"))}</span>`);
+  if(l.prioridade) b.push(`<span class="badge ${prioClass(l.prioridade)}">${h(String(l.prioridade).split(" - ")[0])}</span>`);
+  const contact = l.instagram && l.instagram !== "A localizar" ? l.instagram : (l.whatsapp || "—");
+  const est = d && d.estimativa && d.estimativa.modo !== "volume" && d.estimativa.pacientes_max != null
+    ? `<div class="est">${h(d.estimativa.pacientes_min)}–${h(d.estimativa.pacientes_max)} pacientes/mês · ${h(d.maior_vazamento||"")}</div>`
+    : (d && d.maior_vazamento ? `<div class="est">${h(d.maior_vazamento)}</div>` : "");
+  return `<div class="card" draggable="true" tabindex="0" role="button" data-id="${h(l.id)}">
+    ${b.length ? `<div class="badges">${b.join("")}</div>` : ""}
+    <h4>${h(l.nome_completo || "Sem nome")}</h4>
+    <div class="meta">${h(segOf(l))}${l.cidade ? " · " + h(l.cidade) : ""}<br>${h(contact)}</div>${est}
+  </div>`;
+}
+
+function wireDnD(){
+  document.querySelectorAll(".card").forEach(card => {
+    card.addEventListener("dragstart", e => { card.classList.add("dragging"); e.dataTransfer.setData("text/plain", card.dataset.id); });
+    card.addEventListener("dragend", () => card.classList.remove("dragging"));
+    card.addEventListener("click", () => openDrawer(card.dataset.id));
+    card.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); openDrawer(card.dataset.id); } });
+  });
+  document.querySelectorAll(".col").forEach(col => {
+    col.addEventListener("dragover", e => { e.preventDefault(); col.classList.add("dragover"); });
+    col.addEventListener("dragleave", () => col.classList.remove("dragover"));
+    col.addEventListener("drop", e => { e.preventDefault(); col.classList.remove("dragover"); moveLead(e.dataTransfer.getData("text/plain"), col.dataset.stage); });
+  });
+}
+
+async function moveLead(leadId, newStageId){
+  const lead = leads.find(l => l.id === leadId);
+  const st = stages.find(s => s.id === newStageId);
+  if(!lead || !st || lead.estagio_id === newStageId) return false;
+  const old = lead.estagio_id;
+  lead.estagio_id = newStageId; renderCurrent();
+  try{ await api.move(leadId, newStageId, st.nome); return true; }
+  catch(err){ lead.estagio_id = old; renderCurrent(); showStatus("err", describeError(err)); return false; }
+}
+
+/* ---------- dashboard ---------- */
+function bars(entries, total){
+  return entries.map(([k,n]) => `<div class="barrow"><span class="lname">${h(k)}</span><div class="track"><div class="fill" style="width:${total?Math.round(n/total*100):0}%"></div></div><span class="n">${n}</span></div>`).join("");
+}
+function renderDashboard(){
+  const ls = visibleLeads(), total = ls.length;
+  const byPrio = {}, bySeg = {}, byVaz = {};
+  ls.forEach(l => {
+    const p=(l.prioridade||"—").split(" - ")[0]; byPrio[p]=(byPrio[p]||0)+1;
+    const s=segOf(l)||"—"; bySeg[s]=(bySeg[s]||0)+1;
+    const d=diagOf(l); if(d && d.maior_vazamento) byVaz[d.maior_vazamento]=(byVaz[d.maior_vazamento]||0)+1;
+  });
+  const ganhos = stages.filter(s=>s.is_ganho).reduce((a,s)=>a+ls.filter(l=>l.estagio_id===s.id).length,0);
+  const comDiag = ls.filter(l=>diagOf(l)).length;
+  $("dashboard").innerHTML = `
+    <div class="cards-row">
+      <div class="stat"><div class="num">${total}</div><div class="lbl">Leads neste pipeline</div></div>
+      <div class="stat"><div class="num">${comDiag}</div><div class="lbl">Com diagnóstico do funil</div></div>
+      <div class="stat"><div class="num">${ganhos}</div><div class="lbl">Fechados</div></div>
+      <div class="stat"><div class="num">${byPrio["Alta"]||0}</div><div class="lbl">Prioridade alta</div></div>
+    </div>
+    <div class="barblock"><h4>Por etapa</h4>${bars(stages.map(s=>[s.nome, ls.filter(l=>l.estagio_id===s.id).length]), total) || '<div class="loading">Sem dados</div>'}</div>
+    ${Object.keys(byVaz).length ? `<div class="barblock"><h4>Maior vazamento apontado no quiz</h4>${bars(Object.entries(byVaz).sort((a,b)=>b[1]-a[1]), comDiag)}</div>` : ""}
+    <div class="barblock"><h4>Por segmento</h4>${bars(Object.entries(bySeg).sort((a,b)=>b[1]-a[1]), total) || '<div class="loading">Sem dados</div>'}</div>
+    <div class="barblock"><h4>Por prioridade</h4>${bars(Object.entries(byPrio), total) || '<div class="loading">Sem dados</div>'}</div>`;
+}
+
+/* ---------- ficha do lead ---------- */
+function diagHtml(d){
+  if(!d) return "";
+  const e = d.estimativa || {};
+  const head = e.modo === "volume"
+    ? `<div class="big">Conversão acima da referência</div><div class="money">Potencial está em atrair mais contatos</div>`
+    : `<div class="big">${h(e.pacientes_min)}–${h(e.pacientes_max)} pacientes/mês</div><div class="money">${brl(e.receita_min)} a ${brl(e.receita_max)} em procedimentos/mês</div>`;
+  const rows = [["Clínica", d.clinica],["Contato", d.nome],["Segmento", d.segmento],["Ticket médio", d.ticket],["Contatos/mês", d.contatos],["Agendam", d.taxa_agendamento],["1ª resposta", d.tempo_resposta],["Quem responde", d.quem_responde],["Anúncios", d.trafego]]
+    .filter(r => r[1]).map(r => `<dt>${h(r[0])}</dt><dd>${h(r[1])}</dd>`).join("");
+  return `<div class="diag">
+    <div class="lbl">Diagnóstico do funil</div>${head}
+    ${d.maior_vazamento ? `<div class="vaz">Maior vazamento: <b>${h(d.maior_vazamento)}</b></div>` : ""}
+    <dl>${rows}</dl></div>`;
+}
+
+async function openDrawer(leadId){
+  currentLeadId = leadId;
+  const l = leads.find(x => x.id === leadId);
+  if(!l) return;
+  $("dTitle").textContent = l.nome_completo || "Lead";
+  const maps = safeUrl(l.google_maps_link);
+  const wa = waLink(l.whatsapp);
+  $("dBody").innerHTML = `
+    <div class="actions">
+      <select id="stageSel" class="hsel" aria-label="Etapa">${stages.map(s => `<option value="${h(s.id)}" ${s.id===l.estagio_id?"selected":""}>${h(s.nome)}</option>`).join("")}</select>
+      ${wa ? `<a class="wbtn" href="${h(wa)}" target="_blank" rel="noopener">WhatsApp ↗</a>` : ""}
+    </div>
+    ${diagHtml(diagOf(l))}
+    <div class="field"><div class="k">Segmento</div><div class="v">${h(segOf(l) || "—")}</div></div>
+    <div class="field"><div class="k">Cidade</div><div class="v">${h(l.cidade || "—")}</div></div>
+    <div class="field"><div class="k">Canal / origem</div><div class="v">${h([l.canal, l.origem].filter(Boolean).join(" · ") || "—")}</div></div>
+    <div class="field"><div class="k">Telefone / WhatsApp</div><div class="v">${h(l.whatsapp || "—")}</div></div>
+    <div class="field"><div class="k">Instagram</div><div class="v">${h(l.instagram || "—")}</div></div>
+    <div class="field"><div class="k">Endereço</div><div class="v">${h(l.endereco || "—")}</div></div>
+    <div class="field"><div class="k">Decisor provável</div><div class="v">${h(l.decisor_provavel || "—")}</div></div>
+    <div class="field"><div class="k">Prioridade</div><div class="v">${h(l.prioridade || "—")}</div></div>
+    <div class="field"><div class="k">Google Maps</div><div class="v">${maps ? `<a href="${h(maps)}" target="_blank" rel="noopener">Abrir no Google Maps ↗</a>` : "—"}</div></div>
+    <div class="field"><div class="k">Observações</div><div class="v">${h(l.observacoes || "—")}</div></div>
+    <div class="field"><label class="k" for="noteInput">Adicionar nota</label>
+      <textarea id="noteInput" placeholder="Escreva uma nota sobre este lead..."></textarea>
+      <button class="primary" id="saveNoteBtn">Salvar nota</button></div>
+    <div class="activity" id="activityList"><div class="loading">Carregando histórico…</div></div>`;
+  $("saveNoteBtn").onclick = saveNote;
+  $("stageSel").onchange = async e => { const ok = await moveLead(leadId, e.target.value); if(ok) loadActivities(leadId); else e.target.value = leads.find(x=>x.id===leadId).estagio_id; };
+  $("overlay").hidden = false;
+  $("drawer").classList.add("show");
+  loadActivities(leadId);
+}
+
+async function loadActivities(leadId){
+  try{
+    const acts = await api.activities(leadId);
+    if(currentLeadId !== leadId) return;
+    $("activityList").innerHTML = acts.length
+      ? acts.map(a => `<div class="activity-item">${h(a.conteudo || a.tipo)}<div class="when">${h(fmtDate(a.criado_em))}</div></div>`).join("")
+      : '<div class="loading">Sem atividades ainda.</div>';
+  }catch(err){ if(currentLeadId === leadId) $("activityList").innerHTML = `<div class="loading">${describeError(err)}</div>`; }
+}
+
+async function saveNote(){
+  const txt = $("noteInput").value.trim();
+  if(!txt || !currentLeadId) return;
+  const btn = $("saveNoteBtn"); btn.disabled = true; btn.textContent = "Salvando...";
+  try{ await api.note(currentLeadId, txt); $("noteInput").value = ""; await loadActivities(currentLeadId); }
+  catch(err){ showStatus("err", describeError(err)); }
+  finally{ btn.disabled = false; btn.textContent = "Salvar nota"; }
+}
+
+function closeDrawer(){ $("overlay").hidden = true; $("drawer").classList.remove("show"); currentLeadId = null; }
+
+init();
+</script>
+
+</body></html>
