@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quantos pacientes sua clínica perde? | Starnex</title>
+<meta name="description" content="Responda 8 perguntas em 2 minutos, descubra quantos pacientes sua clínica perde entre o primeiro contato e o agendamento e receba o manual da Starnex.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+<script>
+/* ============================================================
+   CONFIGURAÇÃO — edite só este bloco
+   ============================================================ */
+window.STARNEX = {
+  whatsapp: "5555999132811",           // DDI 55 + DDD 55 + número
+  pixelId: "1014003797608090",
+  supabaseUrl: "",                     // ex.: https://gtnnqoebcudsnzqicrto.supabase.co
+  supabaseAnonKey: "",                 // chave publishable/anon do projeto "Starnex lp e CRM"
+  calendarUrl: "",                     // link da página de agendamento do Google Agenda ou Cal.com (deixe vazio para usar só WhatsApp)
+  ebookUrl: "manual-starnex.pdf",
+  planosPorSemana: 5,
+  vagasRestantes: null,                // número real de vagas desta semana; null esconde o contador
+  taxaReferencia: 0.45,                // % de contatos que agendam numa operação bem estruturada (premissa Starnex)
+  taxaFechamento: 0.5                  // % dos agendados que iniciam tratamento (premissa para o valor em R$)
+};
+</script>
+
+<!-- Meta Pixel -->
+<script>
+(function(){var id=window.STARNEX.pixelId;if(!id)return;
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init',id);fbq('track','PageView');fbq('track','ViewContent',{content_name:'Quiz pacientes perdidos'});})();
+</script>
+
+<style>
+:root{
+  --roxo:#7B2FF7;--roxo-2:#9A5CFF;--roxo-claro:#B794FF;--roxo-tint:rgba(123,47,247,.14);
+  --bg:#0B0A10;--card:#14121C;--card-2:#1C1927;--linha:rgba(255,255,255,.09);
+  --texto:#ECEAF2;--suave:#A6A2B5;--fraco:#6F6B80;--ok:#5BD6A0;--alerta:#FFB547;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--texto);font:400 16px/1.55 Inter,system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(ellipse at 50% 0%,#000 30%,transparent 75%)}
+body::after{content:"";position:fixed;width:700px;height:700px;top:-380px;right:-260px;pointer-events:none;background:radial-gradient(circle,rgba(123,47,247,.35),transparent 65%)}
+h1,h2,h3{font-family:"Space Grotesk",sans-serif;letter-spacing:-.02em;line-height:1.1;color:#fff}
+.mono{font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 16px}
+header{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+.wordmark{font-family:"Space Grotesk";font-weight:700;font-size:21px;letter-spacing:-.03em;color:#fff;display:flex;align-items:center;gap:9px;text-decoration:none}
+.wordmark i{width:11px;height:11px;background:var(--roxo);transform:rotate(45deg);display:inline-block}
+header .mono{color:var(--fraco)}
+.screen{display:none;animation:in .35s ease}
+.screen.on{display:block}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* HERO */
+.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center;padding:48px 0 72px}
+.eyebrow{color:var(--roxo-claro);margin-bottom:18px}
+.hero h1{font-size:clamp(34px,5.4vw,58px);font-weight:700}
+.hero h1 em{font-style:normal;color:var(--roxo-claro)}
+.hero p.lead{color:var(--suave);font-size:18px;margin:22px 0 32px;max-width:540px}
+.btn{appearance:none;border:0;cursor:pointer;background:var(--roxo);color:#fff;font:600 17px "Space Grotesk",sans-serif;padding:17px 28px;border-radius:10px;display:inline-flex;align-items:center;gap:10px;text-decoration:none;transition:background .15s,transform .15s}
+.btn:hover{background:var(--roxo-2)}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.ghost{background:transparent;border:1px solid var(--linha);color:var(--texto)}
+.btn.ghost:hover{background:var(--card-2)}
+.btn.full{width:100%;justify-content:center}
+.meta{display:flex;gap:22px;flex-wrap:wrap;margin-top:22px;color:var(--fraco)}
+.meta span::before{content:"◆ ";color:var(--roxo)}
+.book{position:relative;aspect-ratio:3/4;max-width:340px;margin:0 auto;width:100%;border-radius:6px 14px 14px 6px;background:#0F0D16;border:1px solid var(--linha);padding:28px 26px;box-shadow:-14px 0 0 -6px #1d1a28,0 40px 80px -20px rgba(123,47,247,.45);transform:rotate(-3deg);overflow:hidden}
+.book::before{content:"";position:absolute;width:300px;height:300px;right:-130px;top:-110px;background:radial-gradient(circle,rgba(123,47,247,.6),transparent 65%)}
+.book>*{position:relative}
+.book .wordmark{font-size:15px}
+.book .wordmark i{width:8px;height:8px}
+.book .mono{color:var(--roxo-claro);font-size:9px;margin-top:70px}
+.book h3{font-size:32px;margin-top:10px}
+.book h3 em{font-style:normal;color:var(--roxo-claro)}
+.book p{font-size:12px;color:var(--suave);margin-top:14px}
+
+/* QUIZ */
+.quiz{max-width:640px;margin:24px auto 80px}
+.progress{height:4px;background:var(--card-2);border-radius:4px;overflow:hidden;margin-bottom:12px}
+.progress b{display:block;height:100%;width:0;background:var(--roxo);transition:width .3s}
+.step-meta{display:flex;justify-content:space-between;color:var(--fraco);margin-bottom:28px}
+.back{background:none;border:0;color:var(--suave);cursor:pointer;font:inherit}
+.back:hover{color:#fff}
+.q h2{font-size:clamp(25px,4vw,32px);margin-bottom:8px}
+.q .help{color:var(--suave);margin-bottom:24px}
+.opts{display:grid;gap:10px}
+.opt{appearance:none;text-align:left;cursor:pointer;background:var(--card);border:1px solid var(--linha);color:var(--texto);border-radius:10px;padding:16px 18px;font:500 16px Inter,sans-serif;display:flex;align-items:center;gap:14px;transition:border-color .15s,background .15s}
+.opt:hover{border-color:rgba(183,148,255,.5);background:var(--card-2)}
+.opt.sel{border-color:var(--roxo);background:var(--roxo-tint)}
+.opt kbd{font:500 12px "JetBrains Mono";color:var(--roxo-claro);border:1px solid var(--linha);border-radius:5px;padding:2px 7px;flex:none}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:14px;color:var(--suave);margin-bottom:7px}
+.field input{width:100%;background:var(--card);border:1px solid var(--linha);border-radius:10px;padding:15px 16px;color:#fff;font:500 16px Inter,sans-serif;outline:none}
+.field input:focus{border-color:var(--roxo)}
+.fine{font-size:13px;color:var(--fraco);margin-top:14px}
+.err{color:#FF8A8A;font-size:14px;margin-top:10px;min-height:20px}
+
+/* RESULTADO */
+.result{max-width:820px;margin:16px auto 80px}
+.result .eyebrow{margin-bottom:12px}
+.result h1{font-size:clamp(28px,4.6vw,44px)}
+.big{background:var(--card);border:1px solid var(--linha);border-radius:16px;padding:32px;margin:28px 0 18px;position:relative;overflow:hidden}
+.big::after{content:"";position:absolute;width:360px;height:360px;right:-160px;bottom:-200px;background:radial-gradient(circle,rgba(123,47,247,.35),transparent 65%)}
+.big>*{position:relative;z-index:1}
+.big .n{font-family:"Space Grotesk";font-weight:700;font-size:clamp(44px,8vw,76px);line-height:1;color:#fff;letter-spacing:-.03em}
+.big .n small{font-size:.38em;color:var(--suave);font-weight:500;letter-spacing:0}
+.big .money{font-family:"Space Grotesk";font-size:22px;color:var(--roxo-claro);margin-top:12px;font-weight:600}
+.big .note{color:var(--fraco);font-size:13px;margin-top:16px;max-width:560px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.card{background:var(--card);border:1px solid var(--linha);border-radius:14px;padding:24px}
+.card .mono{color:var(--roxo-claro);margin-bottom:10px;display:block}
+.card h3{font-size:22px;margin-bottom:8px}
+.card p{color:var(--suave);font-size:15px}
+.pts{list-style:none;display:grid;gap:10px;margin-top:4px}
+.pts li{display:flex;gap:10px;font-size:15px;color:var(--suave)}
+.pts li::before{content:"";flex:none;width:7px;height:7px;margin-top:8px;background:var(--alerta);transform:rotate(45deg)}
+.dl{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.offer{margin-top:18px;border-radius:16px;padding:36px 32px;background:linear-gradient(140deg,#24104A 0%,#160D2B 55%,#120F1A 100%);border:1px solid rgba(183,148,255,.35)}
+.offer h2{font-size:clamp(26px,4vw,36px);margin:10px 0 14px}
+.offer ul{list-style:none;display:grid;gap:10px;margin:20px 0 26px}
+.offer li{display:flex;gap:12px;color:#D9D4E8}
+.offer li b{color:#fff;font-weight:600}
+.offer li::before{content:"";flex:none;width:18px;height:18px;margin-top:3px;border-radius:50%;background:var(--roxo) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E") center/11px no-repeat}
+.slots{display:inline-flex;align-items:center;gap:10px;background:rgba(255,181,71,.1);border:1px solid rgba(255,181,71,.35);color:var(--alerta);border-radius:999px;padding:7px 14px;font-size:14px;font-weight:500;margin-bottom:20px}
+.slots i{width:8px;height:8px;border-radius:50%;background:var(--alerta);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.actions{display:flex;gap:12px;flex-wrap:wrap}
+.cal{display:none;margin-top:22px;border-radius:12px;overflow:hidden;background:#fff}
+.cal.on{display:block}
+.cal iframe{width:100%;height:680px;border:0;display:block}
+footer{position:relative;z-index:1;border-top:1px solid var(--linha);padding:26px 0;color:var(--fraco);font-size:13px}
+footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+@media (max-width:820px){
+  .hero{grid-template-columns:1fr;gap:40px;padding:24px 0 56px}
+  .book{max-width:250px}
+  .book h3{font-size:24px}
+  .book .mono{margin-top:40px}
+  .grid2{grid-template-columns:1fr}
+  .big,.offer{padding:24px 20px}
+  .btn{font-size:16px}
+  .actions .btn{width:100%;justify-content:center}
+  header .mono{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="wordmark" href="#" aria-label="Starnex"><i></i>starnex</a>
+    <span class="mono">Hub de soluções para clínicas</span>
+  </header>
+
+  <!-- 0 · HERO -->
+  <section class="screen on" id="s-hero">
+    <div class="hero">
+      <div>
+        <div class="eyebrow mono">Diagnóstico gratuito em 2 minutos</div>
+        <h1>Quantos pacientes sua clínica perde entre o <em>"quanto custa?"</em> e o agendamento?</h1>
+        <p class="lead">Responda 8 perguntas sobre o seu atendimento, veja a estimativa da sua clínica em pacientes e em reais, e receba o manual <strong style="color:#fff">Do "quanto custa?" ao agendamento</strong>.</p>
+        <button class="btn" id="start">Calcular minha estimativa <span aria-hidden="true">→</span></button>
+        <div class="meta mono"><span>8 perguntas</span><span>Resultado na hora</span><span>Para todas as especialidades</span></div>
+      </div>
+      <div class="book" aria-hidden="true">
+        <div class="wordmark"><i></i>starnex</div>
+        <div class="mono">Manual prático · clínicas de saúde</div>
+        <h3>Do <em>"quanto custa?"</em> ao agendamento.</h3>
+        <p>11 capítulos · modelos de resposta por especialidade · autoavaliação</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="screen" id="s-quiz">
+    <div class="quiz">
+      <div class="progress"><b id="bar"></b></div>
+      <div class="step-meta mono"><button class="back" id="back">← Voltar</button><span id="count"></span></div>
+      <div class="q" id="q"></div>
+      <div class="err" id="err" role="alert"></div>
+    </div>
+  </section>
+
+  <!-- RESULTADO -->
+  <section class="screen" id="s-result">
+    <div class="result" id="result"></div>
+  </section>
+</div>
+
+<footer><div class="wrap"><span><strong style="color:#fff">Starnex</strong> · marketing exclusivo para clínicas de saúde</span><span>Seus dados são usados apenas para preparar seu diagnóstico e entrar em contato com você.</span></div></footer>
+
+<script>
+(function(){
+const C = window.STARNEX;
+const qs = new URLSearchParams(location.search);
+const leadRef = qs.get('l') || null;
+const utm = {}; ['utm_source','utm_medium','utm_campaign','utm_content'].forEach(k=>{ if(qs.get(k)) utm[k]=qs.get(k); });
+const sessionId = (crypto.randomUUID ? crypto.randomUUID() : Date.now()+'-'+Math.random().toString(16).slice(2));
+
+/* ---------- registro de eventos no Supabase ---------- */
+function track(evento, payload){
+  if(!C.supabaseUrl || !C.supabaseAnonKey) return;
+  fetch(C.supabaseUrl.replace(/\/$/,'') + '/rest/v1/funil_reativacao_eventos', {
+    method:'POST', keepalive:true,
+    headers:{'apikey':C.supabaseAnonKey,'Authorization':'Bearer '+C.supabaseAnonKey,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body: JSON.stringify({session_id:sessionId, lead_ref:leadRef, evento, payload:payload||{}, utm})
+  }).catch(()=>{});
+}
+function px(ev, data, custom){ if(window.fbq){ custom ? fbq('trackCustom',ev,data||{}) : fbq('track',ev,data||{}); } }
+track('pagina_aberta');
+
+/* ---------- perguntas ---------- */
+const Q = [
+  {id:'segmento', t:'Qual é a especialidade principal da clínica?', opts:['Odontologia','Estética e harmonização','Dermatologia','Cirurgia plástica','Fisioterapia','Nutrição','Psicologia','Clínica médica / outra especialidade']},
+  {id:'clinica', t:'Como se chama a clínica e em que cidade ela fica?', help:'Usamos isso para personalizar o seu resultado.', fields:[{k:'clinica',l:'Nome da clínica',p:'Ex.: Clínica Sorriso'},{k:'cidade',l:'Cidade',p:'Ex.: Uruguaiana'}]},
+  {id:'ticket', t:'Qual o valor médio do procedimento que mais traz faturamento?', help:'Uma faixa aproximada já basta.', opts:[['Até R$ 300',200],['R$ 300 a R$ 1.000',650],['R$ 1.000 a R$ 3.000',2000],['R$ 3.000 a R$ 8.000',5000],['Acima de R$ 8.000',10000]]},
+  {id:'contatos', t:'Quantos contatos novos chegam por mês no WhatsApp?', help:'Pessoas que nunca foram pacientes.', opts:[['Até 30',[10,30]],['30 a 80',[30,80]],['80 a 150',[80,150]],['150 a 300',[150,300]],['Mais de 300',[300,400]]]},
+  {id:'taxa', t:'De cada 10 contatos novos, quantos agendam?', opts:[['Menos de 2',0.12],['2 ou 3',0.27],['4 ou 5',0.42],['Mais de 5',0.55],['Não sei dizer',null]]},
+  {id:'tempo', t:'Em quanto tempo um contato novo costuma receber a primeira resposta?', opts:['Em até 5 minutos','Em até 1 hora','No mesmo dia','No dia seguinte ou depois']},
+  {id:'quem', t:'Quem responde o WhatsApp da clínica?', opts:['Uma pessoa com horário dedicado a isso','A secretária, junto com outras funções','O próprio profissional / dono','Quem estiver disponível no momento']},
+  {id:'trafego', t:'A clínica investe em anúncios hoje?', opts:['Sim, com agência ou gestor','Sim, eu mesmo faço','Só impulsiono posts','Não invisto']}
+];
+const needContact = !leadRef;
+const total = Q.length + (needContact?1:0);
+const A = {};
+let i = 0;
+
+const $ = id => document.getElementById(id);
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); $(id).classList.add('on'); window.scrollTo({top:0,behavior:'smooth'}); }
+
+$('start').onclick = () => { track('quiz_iniciado'); px('QuizIniciado',{},true); show('s-quiz'); render(); };
+$('back').onclick = () => { if(i===0){ show('s-hero'); return; } i--; render(); };
+
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function render(){
+  $('err').textContent='';
+  $('bar').style.width = (i/total*100)+'%';
+  $('count').textContent = (i+1)+' / '+total;
+  const box = $('q');
+  if(i === Q.length){ // contato
+    box.innerHTML = `<h2>Para onde enviamos o seu resultado?</h2><p class="help">Você vê a estimativa na próxima tela e recebe o manual por aqui.</p>
+      <div class="field"><label for="f-nome">Seu nome</label><input id="f-nome" autocomplete="name" value="${esc(A.nome||'')}"></div>
+      <div class="field"><label for="f-wpp">WhatsApp com DDD</label><input id="f-wpp" type="tel" inputmode="tel" autocomplete="tel" placeholder="(55) 99999-9999" value="${esc(A.whatsapp||'')}"></div>
+      <button class="btn full" id="next">Ver meu resultado →</button>
+      <p class="fine">Ao continuar, você concorda em ser contatado pela Starnex pelo WhatsApp. Não compartilhamos seus dados.</p>`;
+    $('f-wpp').addEventListener('input',e=>{ let d=e.target.value.replace(/\D/g,'').slice(0,11); e.target.value = d.length>6 ? `(${d.slice(0,2)}) ${d.slice(2,d.length-4)}-${d.slice(-4)}` : d.length>2 ? `(${d.slice(0,2)}) ${d.slice(2)}` : d; });
+    $('next').onclick = () => {
+      const nome=$('f-nome').value.trim(), wpp=$('f-wpp').value.replace(/\D/g,'');
+      if(nome.length<2) return $('err').textContent='Informe seu nome.';
+      if(wpp.length<10) return $('err').textContent='Informe um WhatsApp válido com DDD.';
+      A.nome=nome; A.whatsapp=wpp; finish();
+    };
+    return;
+  }
+  const q = Q[i];
+  let h = `<h2>${q.t}</h2>${q.help?`<p class="help">${q.help}</p>`:'<div style="height:16px"></div>'}`;
+  if(q.fields){
+    h += q.fields.map(f=>`<div class="field"><label for="f-${f.k}">${f.l}</label><input id="f-${f.k}" placeholder="${f.p}" value="${esc(A[f.k]||'')}"></div>`).join('');
+    h += `<button class="btn full" id="next">Continuar →</button>`;
+    box.innerHTML = h;
+    $('next').onclick = () => {
+      for(const f of q.fields){ const v=$('f-'+f.k).value.trim(); if(v.length<2) return $('err').textContent='Preencha '+f.l.toLowerCase()+'.'; A[f.k]=v; }
+      i++; render();
+    };
+    $('f-'+q.fields[0].k).focus();
+    return;
+  }
+  h += `<div class="opts">` + q.opts.map((o,k)=>{ const lbl=Array.isArray(o)?o[0]:o; return `<button class="opt${A[q.id]&&A[q.id].label===lbl?' sel':''}" data-k="${k}"><kbd>${String.fromCharCode(65+k)}</kbd>${lbl}</button>`; }).join('') + `</div>`;
+  box.innerHTML = h;
+  box.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+    const o=q.opts[+b.dataset.k];
+    A[q.id] = Array.isArray(o) ? {label:o[0],v:o[1]} : {label:o,v:+b.dataset.k};
+    b.classList.add('sel');
+    setTimeout(()=>{ i++; if(i===Q.length && !needContact) finish(); else render(); },180);
+  });
+}
+
+/* ---------- cálculo ---------- */
+function calc(){
+  const [cMin,cMax] = A.contatos.v;
+  const taxaDesconhecida = A.taxa.v === null;
+  const taxa = taxaDesconhecida ? 0.18 : A.taxa.v;
+  const gap = Math.max(C.taxaReferencia - taxa, 0);
+  const ticket = A.ticket.v;
+  const pMin = Math.round(cMin*gap), pMax = Math.max(Math.round(cMax*gap), Math.round(cMin*gap)+1);
+  const rMin = pMin*C.taxaFechamento*ticket, rMax = pMax*C.taxaFechamento*ticket;
+  const tempoLento = A.tempo.v >= 2, semDono = A.quem.v === 3;
+  let vaz;
+  if(tempoLento) vaz = {t:'Tempo de resposta', d:`Responder ${A.tempo.label.toLowerCase()} coloca a clínica atrás de quem responde em minutos. Quem manda mensagem costuma escrever para mais de uma clínica ao mesmo tempo.`};
+  else if(taxaDesconhecida) vaz = {t:'Falta de medição', d:'Sem saber quantos contatos agendam, não dá para saber onde o paciente se perde, nem se o anúncio ou o atendimento é o problema.'};
+  else if(gap >= .12) vaz = {t:'Conversão no WhatsApp', d:'Os contatos chegam, mas uma parte grande não vira agendamento. O ponto mais comum é a resposta ao "quanto custa?" e a falta de follow-up.'};
+  else if(semDono) vaz = {t:'Falta de responsável', d:'Quando todo mundo responde, ninguém acompanha. Contatos ficam sem retorno entre um atendimento e outro.'};
+  else vaz = {t:'Volume de contatos', d:'Seu atendimento converte acima da referência. O maior ganho agora está em atrair mais pessoas que procuram sua especialidade na sua cidade.'};
+  const pts = [];
+  if(tempoLento) pts.push('Primeira resposta demora: o interesse esfria rápido.');
+  if(taxaDesconhecida) pts.push('A clínica não mede quantos contatos agendam.');
+  if(!taxaDesconhecida && gap>=.12) pts.push(`Hoje cerca de ${Math.round(taxa*100)}% dos contatos agendam. A referência que usamos é ${Math.round(C.taxaReferencia*100)}%.`);
+  if(semDono) pts.push('Não há uma pessoa responsável pelos contatos novos.');
+  if(A.quem.v === 2) pts.push('O próprio profissional responde: a resposta compete com o atendimento.');
+  if(A.trafego.v === 3) pts.push('Sem anúncios, a clínica depende só de indicação e busca orgânica.');
+  if(A.trafego.v === 2) pts.push('Impulsionar posts raramente traz paciente novo de forma previsível.');
+  if(A.contatos.v[1] <= 30) pts.push('Poucos contatos novos por mês limitam o crescimento da agenda.');
+  return {cMin,cMax,taxa,taxaDesconhecida,gap,pMin,pMax,rMin,rMax,ticket,vaz,pts:pts.slice(0,4),volumeMode:gap<0.05};
+}
+const brl = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+
+/* ---------- final ---------- */
+function finish(){
+  $('bar').style.width='100%';
+  const r = calc();
+  const resumo = {
+    nome:A.nome||null, whatsapp:A.whatsapp||null, clinica:A.clinica, cidade:A.cidade,
+    segmento:A.segmento.label, ticket:A.ticket.label, contatos:A.contatos.label, taxa_agendamento:A.taxa.label,
+    tempo_resposta:A.tempo.label, quem_responde:A.quem.label, trafego:A.trafego.label,
+    estimativa:{pacientes_min:r.pMin,pacientes_max:r.pMax,receita_min:r.rMin,receita_max:r.rMax,modo:r.volumeMode?'volume':'conversao'},
+    maior_vazamento:r.vaz.t
+  };
+  track('quiz_concluido', resumo);
+  px('Lead',{content_name:'Quiz pacientes perdidos', content_category:A.segmento.label});
+  renderResult(r, resumo);
+  show('s-result');
+}
+
+function renderResult(r, resumo){
+  const nomeCli = esc(A.clinica);
+  const wppText = encodeURIComponent(
+    `Olá, Filipe! Fiz o diagnóstico da ${A.clinica} (${A.cidade}).\n` +
+    (r.volumeMode ? `Resultado: conversão acima da referência, foco em volume.\n` : `Estimativa: ${r.pMin} a ${r.pMax} pacientes/mês deixando de agendar.\n`) +
+    `Maior vazamento: ${r.vaz.t}.\nQuero meu Plano de Recuperação de Pacientes.`);
+  const wppUrl = `https://wa.me/${C.whatsapp}?text=${wppText}`;
+  const slots = (typeof C.vagasRestantes === 'number')
+    ? `<div class="slots"><i></i>${C.vagasRestantes>0 ? `Restam ${C.vagasRestantes} de ${C.planosPorSemana} vagas nesta semana` : 'Vagas desta semana preenchidas: reserve para a próxima'}</div>` : '';
+
+  const headline = r.volumeMode
+    ? `<div class="n">Acima da referência</div><div class="money">O potencial da ${nomeCli} está em atrair mais contatos.</div>
+       <p class="note">Hoje cerca de ${Math.round(r.taxa*100)}% dos seus contatos agendam. Nesse ritmo, cada 10 contatos novos a mais por mês viram cerca de ${Math.round(10*r.taxa)} agendamentos.</p>`
+    : `<div class="n">${r.pMin} a ${r.pMax} <small>pacientes por mês</small></div>
+       <div class="money">${brl(r.rMin)} a ${brl(r.rMax)} em procedimentos por mês</div>
+       <p class="note">Estimativa com base nas suas respostas: ${A.contatos.label.toLowerCase()} contatos por mês, taxa de agendamento ${r.taxaDesconhecida?'presumida em 18% (não informada)':'de cerca de '+Math.round(r.taxa*100)+'%'}, referência de ${Math.round(C.taxaReferencia*100)}%, ticket médio de ${brl(r.ticket)} e ${Math.round(C.taxaFechamento*100)}% dos agendados iniciando tratamento. No plano, refazemos a conta com os seus números reais.</p>`;
+
+  $('result').innerHTML = `
+    <div class="eyebrow mono">Resultado · ${nomeCli} · ${esc(A.cidade)}</div>
+    <h1>${r.volumeMode ? 'Seu atendimento converte bem.' : 'É isso que a sua clínica deixa de agendar.'}</h1>
+    <div class="big">${headline}</div>
+    <div class="grid2">
+      <div class="card"><span class="mono">Maior vazamento</span><h3>${r.vaz.t}</h3><p>${r.vaz.d}</p></div>
+      <div class="card"><span class="mono">Pontos de atenção</span><ul class="pts">${(r.pts.length?r.pts:['Nenhum ponto crítico no atendimento. O próximo passo é crescer o volume.']).map(p=>`<li>${p}</li>`).join('')}</ul></div>
+    </div>
+    <div class="card" style="margin-top:18px">
+      <div class="dl">
+        <div><span class="mono">Seu material</span><h3 style="margin:0">Do "quanto custa?" ao agendamento</h3><p>11 capítulos, modelos de resposta para ${esc(A.segmento.label.toLowerCase())} e a autoavaliação completa.</p></div>
+        <a class="btn ghost" id="dl" href="${C.ebookUrl}" target="_blank" rel="noopener" download>Baixar o manual (PDF)</a>
+      </div>
+    </div>
+    <div class="offer">
+      <span class="mono" style="color:var(--roxo-claro)">Próximo passo</span>
+      <h2>Plano de Recuperação de Pacientes para a ${nomeCli}</h2>
+      <p style="color:#CFC8E2">O manual mostra o caminho geral. O plano mostra o seu: montado à mão a partir das suas respostas e apresentado em 20 minutos por videochamada.</p>
+      <ul>
+        <li><span><b>Demanda real em ${esc(A.cidade)}:</b> quantas pessoas procuram ${esc(A.segmento.label.toLowerCase())} por mês e quem está aparecendo para elas.</span></li>
+        <li><span><b>Teste de atendimento:</b> como a sua clínica responde a um paciente novo hoje.</span></li>
+        <li><span><b>A conta refeita com os seus números</b> e as 3 ações que recuperam mais pacientes primeiro.</span></li>
+      </ul>
+      ${slots}
+      <p style="color:var(--suave);font-size:14px;margin-bottom:18px">Montamos ${C.planosPorSemana} planos por semana, porque cada um é feito individualmente.</p>
+      <div class="actions">
+        ${C.calendarUrl ? `<button class="btn" id="agendar">Escolher horário para meu plano →</button><a class="btn ghost" id="wpp" href="${wppUrl}" target="_blank" rel="noopener">Prefiro falar pelo WhatsApp</a>`
+                        : `<a class="btn" id="wpp" href="${wppUrl}" target="_blank" rel="noopener">Quero meu plano →</a>`}
+      </div>
+      ${C.calendarUrl ? `<div class="cal" id="cal"></div>` : ''}
+    </div>`;
+
+  $('dl').onclick = () => { track('material_baixado'); px('MaterialBaixado',{},true); };
+  $('wpp').onclick = () => { track('whatsapp_click', {origem:'resultado'}); px('Contact'); };
+  if(C.calendarUrl){
+    $('agendar').onclick = () => {
+      const cal=$('cal');
+      if(!cal.firstChild){ const f=document.createElement('iframe'); f.src=C.calendarUrl; f.title='Agendar plano'; f.loading='lazy'; cal.appendChild(f); }
+      cal.classList.add('on'); cal.scrollIntoView({behavior:'smooth',block:'start'});
+      track('agenda_aberta'); px('Schedule');
+    };
+  }
+}
+})();
+</script>
+</body>
+</html>
