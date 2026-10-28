@@ -1,0 +1,30 @@
+# Mantém o banco "Starnex lp e CRM" ativo no plano gratuito do Supabase,
+# que pausa projetos sem acesso por alguns dias.
+# Faz uma consulta leve por dia. Se falhar, o GitHub avisa por e-mail.
+name: Manter banco ativo
+
+on:
+  schedule:
+    - cron: "17 11 * * *"   # todo dia, 08:17 no horário de Brasília
+  workflow_dispatch: {}      # permite rodar manualmente pela aba Actions
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Consultar o banco
+        env:
+          SUPABASE_URL: https://gtnnqoebcudsnzqicrto.supabase.co
+          # Chave pública (anon). É a mesma que já está no funil; não dá acesso aos leads.
+          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0bm5xb2ViY3Vkc256cWljcnRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg2MjcwOTksImV4cCI6MjEwNDIwMzA5OX0.qNAAXmOzUL1VgocdzpqG8fFTNdP-V1n-5UFkMpE8k94
+        run: |
+          status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 \
+            "$SUPABASE_URL/rest/v1/pipelines?select=id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+          echo "Resposta do Supabase: $status"
+          if [ "$status" != "200" ]; then
+            echo "::error::O banco não respondeu como esperado (HTTP $status). Verifique se o projeto foi pausado no painel do Supabase."
+            exit 1
+          fi
